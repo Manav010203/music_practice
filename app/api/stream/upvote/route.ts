@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 import {z} from "zod"
 
-const UpvotSchema = z.object({
+const UpvoteSchema = z.object({
      streamId : z.string(),
 
 })
@@ -11,29 +11,35 @@ const UpvotSchema = z.object({
 export async function POST (req: NextRequest){
     const session = await getServerSession();
    
-    const user =await prismaClient.user.findFirst({
-        where:{
-            email : session?.user?.email ?? ""
-        }
-    })
-    if(!user){
-        return NextResponse.json({
-            message: "Unauthenticated"
-        },{
-            status:403
-        })
-    }
+    if (!session?.user) {
+        return NextResponse.json(
+          {
+            message: "Unauthenticated",
+          },
+          {
+            status: 403,
+          },
+        );
+      }
+      const user = session.user;
+    
 
-    try{
-        const data = UpvotSchema.parse(await req.json)
+    try {
+       
+        console.log(await req.json())
+        const data = UpvoteSchema.parse(await req.json());
         await prismaClient.upvote.create({
-            data:{
-                userId:user.id,
-                streamId: data.streamId
-            }
+          data: {
+            userId: user.id,
+            streamId: data.streamId,
+          },
+        });
+        return NextResponse.json({
+            message: "DOne!"
         })
     }
     catch(e){
+        console.log(e)
         return NextResponse.json({
             message:"ERROR while upvoting"
         },{

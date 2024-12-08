@@ -18,21 +18,24 @@ model User {
   name String?
   password String?
   provider Provider
-  streams Stream[]
+  streams Stream[] @relation("user")
   upvotes Upvote[]
 }
 model Stream {
-  id String @id @default(uuid())
-  type StreamType
-  url String
-  extractedId String
-  title String @default("")
-  smallImg String @default("")
-  bigImg String @default("")
-  active Boolean @default(true)
-  upvotes Upvote[]
-  userId String
-  user User @relation(fields: [userId], references: [id])
+  id            String         @id @default(uuid())
+  type          StreamType
+  url           String
+  extractedId   String
+  title         String         @default("")
+  smallImg      String         @default("")
+  bigImg        String         @default("")
+  active        Boolean        @default(true)
+  played        Boolean        @default(false)
+  playedTs      DateTime?
+  createAt      DateTime       @default(now())
+  upvotes       Upvote[]
+  userId        String
+  user          User           @relation(fields: [userId], references: [id], name: "user")
 }
 
 model Upvote {
