@@ -18,6 +18,15 @@ const App: React.FC = () => {
 
   const addSong = () => {
     if (!url) return;
+    fetch("/api/stream",
+        {
+            method: "POST",
+            body: JSON.stringify({
+             url:url,
+             creatorId: "creatorId"
+            })
+        }
+    )
 
     const videoId = url.split("v=")[1]?.split("&")[0];
     if (videoId) {
@@ -26,17 +35,11 @@ const App: React.FC = () => {
         { id: uuidv4(), videoId, title: `Song ${queue.length + 1}`, upvotes: 0 },
       ]);
       setUrl("");
+      
     } else {
       alert("Invalid YouTube URL");
     }
-    fetch("/api/stream",
-        {
-            method: "POST",
-            body: JSON.stringify({
-             url:setUrl
-            })
-        }
-    )
+   
   };
 
 //   const upvoteSong = (id: string) => {
@@ -110,7 +113,7 @@ const handleVote = (id:string, isUpvote:boolean)=>{
           className="px-4 py-2 rounded bg-gray-800 text-white border border-gray-700 w-80"
         />
         <button
-          onClick={addSong}
+          onClick={addSong }
           className="ml-4 px-6 py-2 bg-green-600 rounded hover:bg-green-700"
         >
           Add Song

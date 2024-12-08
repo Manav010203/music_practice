@@ -5,7 +5,6 @@ import {z} from "zod"
 
 const UpvoteSchema = z.object({
      streamId : z.string(),
-
 })
 
 export async function POST (req: NextRequest){
@@ -22,14 +21,11 @@ export async function POST (req: NextRequest){
         );
       }
       const user = session.user;
-    
-
     try {
-       
-        console.log(await req.json())
         const data = UpvoteSchema.parse(await req.json());
         await prismaClient.upvote.create({
           data: {
+            //@ts-ignore
             userId: user.id,
             streamId: data.streamId,
           },

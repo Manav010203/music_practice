@@ -39,12 +39,13 @@ model Stream {
 }
 
 model Upvote {
-  id String @id @default(uuid())
-  userId String
+  id       String @id @default(uuid())
+  userId   String
   streamId String
-  user User @relation(fields: [userId],references: [id])
-  stream Stream @relation(fields: [streamId],references: [id])
-  @@unique([userId,streamId])
+  user     User   @relation(fields: [userId], references: [id])
+  stream   Stream @relation(fields: [streamId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, streamId])
 }
 
 enum StreamType{
