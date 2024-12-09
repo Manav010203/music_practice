@@ -18,9 +18,9 @@ export function Appbar(){
           <Link href="#fans" className="hover:text-purple-400 transition">For Fans</Link>
         </nav>
         {
-                    session.data?.user && <Button className="m-2 p-2 bg-blue-400" onClick={()=>signOut()}>Logout</Button>
+                    session.data?.user && <Button className="m-2 p-2 bg-purple-600 text-white hover:bg-purple-700 text-lg" onClick={()=>signOut()}>Logout</Button>
                 }
-                {!session.data?.user && <Button className="m-2 p=2 bg-blue-400" onClick={()=> signIn
+                {!session.data?.user && <Button className="m-2 p=2 bg-purple-600 text-white hover:bg-purple-700 text-lg" onClick={()=> signIn
                     ()}>
                     Signin
                 </Button>

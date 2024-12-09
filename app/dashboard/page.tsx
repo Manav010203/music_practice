@@ -1,175 +1,196 @@
+'use client'
 
-"use client"
-import React, { useState } from "react";
-import YouTube, { YouTubeProps } from "react-youtube";
-import { v4 as uuidv4 } from "uuid";
+import { useState, useEffect } from 'react'
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Card, CardContent } from "@/components/ui/card"
+import { ThumbsUp, ThumbsDown, Play, Music, Pause, SkipForward } from 'lucide-react'
+import { Progress } from "@/components/ui/progress"
 
 interface Song {
-  id: string;
-  videoId: string;
-  title: string;
-  upvotes: number;
+  id: string
+  url: string
+  title: string
+  upvotes: number
+  downvotes: number
 }
 
-const App: React.FC = () => {
-  const [queue, setQueue] = useState<Song[]>([]);
-  const [currentSong, setCurrentSong] = useState<Song | null>(null);
-  const [url, setUrl] = useState<string>("");
+export default function SongQueue() {
+  const [songs, setSongs] = useState<Song[]>([])
+  const [inputUrl, setInputUrl] = useState('')
+  const [currentSong, setCurrentSong] = useState<Song | null>(null)
+  const [isPlaying, setIsPlaying] = useState(false)
+  const [progress, setProgress] = useState(0)
 
-  const addSong = () => {
-    if (!url) return;
-    fetch("/api/stream",
-        {
-            method: "POST",
-            body: JSON.stringify({
-             url:url,
-             creatorId: "creatorId"
-            })
-        }
-    )
+  const extractVideoId = (url: string) => {
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/
+    const match = url.match(regExp)
+    return (match && match[2].length === 11) ? match[2] : null
+  }
 
-    const videoId = url.split("v=")[1]?.split("&")[0];
-    if (videoId) {
-      setQueue([
-        ...queue,
-        { id: uuidv4(), videoId, title: `Song ${queue.length + 1}`, upvotes: 0 },
-      ]);
-      setUrl("");
-      
-    } else {
-      alert("Invalid YouTube URL");
-    }
-   
-  };
-
-//   const upvoteSong = (id: string) => {
-//     setQueue(
-//       queue.map((song) =>
-//         song.id === id ? { ...song, upvotes: song.upvotes + 1 } : song)
-//     );
-//     fetch("/api/stream/upvote",{
-//         method:"POST",
-//         body: JSON.stringify({
-//             streamId: id
-//         })
-//       })
-//   };
-
-//   const downvoteSong = (id: string) => {
-//     setQueue(
-//       queue.map((song) =>
-//         song.id === id
-//           ? { ...song, upvotes: Math.max(0, song.upvotes - 1) }
-//           : song
-//       )
-//     );
-//     // fetch("/api/stream/downvote",{
-//     //     method:"POST",
-//     //     body: JSON.stringify({
-//     //         streamId: id
-//     //     })
-//     //   })
-//   };
-
-const handleVote = (id:string, isUpvote:boolean)=>{
-    setQueue(queue.map(video=>video.id===id
-        ? {
-            ...video,
-            upvotes: isUpvote? video.upvotes+1 : video.upvotes,
-        }
-        : video
-    ).sort((a,b)=> (b.upvotes)-(a.upvotes)))
-    fetch("/api/stream/upvote",{
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    const res = await fetch("/api/stream/",{
         method:"POST",
-        body:JSON.stringify({
-            streamID: id
+        body: JSON.stringify({
+            creatorId:"4cbbdb8a-77ed-4faa-bbad-b28ecde8cf93",
+            url: inputUrl
         })
     })
-}
+    const videoId = extractVideoId(inputUrl)
+    if (videoId) {
+      const newSong: Song = {
+        id: videoId,
+        url: inputUrl,
+        title: `Song ${songs.length + 1}`, // Placeholder title
+        upvotes: 0,
+        downvotes: 0
+      }
+      setSongs([...songs, newSong])
+      setInputUrl('')
+    } else {
+      alert('Invalid YouTube URL')
+    }
+  }
+
+  const handleVote = (index: number, type: 'up' | 'down') => {
+    const newSongs = [...songs]
+    if (type === 'up') {
+      newSongs[index].upvotes++
+    } else {
+      newSongs[index].downvotes++
+    }
+    setSongs(newSongs)
+  }
+
+  useEffect(() => {
+    const sortedSongs = [...songs].sort((a, b) => b.upvotes - a.upvotes)
+    if (sortedSongs.length > 0 && !currentSong) {
+      setCurrentSong(sortedSongs[0])
+      setSongs(sortedSongs.slice(1))
+      setIsPlaying(true)
+    }
+  }, [songs, currentSong])
 
   const playNextSong = () => {
-    if (queue.length > 0) {
-      const [nextSong, ...rest] = queue;
-      setCurrentSong(nextSong);
-      setQueue(rest);
+    if (songs.length > 0) {
+      const sortedSongs = [...songs].sort((a, b) => b.upvotes - a.upvotes)
+      setCurrentSong(sortedSongs[0])
+      setSongs(sortedSongs.slice(1))
+      setIsPlaying(true)
+      setProgress(0)
+    } else {
+      setCurrentSong(null)
+      setIsPlaying(false)
+      setProgress(0)
     }
-  };
+  }
 
-  const handlePlayerEnd: YouTubeProps["onEnd"] = () => {
-    playNextSong();
-  };
+  useEffect(() => {
+    let interval: NodeJS.Timeout
+    if (isPlaying && currentSong) {
+      interval = setInterval(() => {
+        setProgress((prevProgress) => {
+          if (prevProgress >= 100) {
+            clearInterval(interval)
+            playNextSong()
+            return 0
+          }
+          return prevProgress + 1
+        })
+      }, 1000) // Update every second
+    }
+    return () => clearInterval(interval)
+  }, [isPlaying, currentSong])
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center py-10">
-      <h1 className="text-3xl font-bold mb-6">StreamTunes</h1>
+    <div className=" mx-auto p-4 bg-gray-900 text-gray-100 min-h-screen">
+      <h1 className="text-3xl font-bold mb-6 text-center text-gray-300">STREAMS</h1>
+      
+      {/* Current Song Preview */}
+      {currentSong && (
+        <Card className="mb-6 bg-gray-800 border-gray-600 border-2">
+          <CardContent className="p-4">
+            <h2 className="text-xl font-semibold mb-2 text-gray-300">Now Playing</h2>
+            <div className="aspect-w-16 aspect-h-9 mb-4">
+              <iframe
+                src={`https://www.youtube.com/embed/${currentSong.id}?autoplay=1&mute=0`}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                className="w-100 h-40 rounded-lg"
+              ></iframe>
+            </div>
+        
+            <div className="flex justify-end items-center">
+              
+              <Button onClick={playNextSong} variant="outline" className="bg-gray-700 hover:bg-gray-600 text-gray-200">
+                <SkipForward className="mr-2 h-4 w-4" />
+                Next Song
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
-      {/* Input for song URL */}
-      <div className="mb-6">
-        <input
-          type="text"
-          value={url}
-          onChange={(e) => setUrl(e.target.value)}
-          placeholder="Paste YouTube URL..."
-          className="px-4 py-2 rounded bg-gray-800 text-white border border-gray-700 w-80"
-        />
-        <button
-          onClick={addSong }
-          className="ml-4 px-6 py-2 bg-green-600 rounded hover:bg-green-700"
-        >
-          Add Song
-        </button>
-      </div>
-
-      {/* Current Song */}
-      <div className="mb-6 w-3/4">
-        {currentSong ? (
-          <>
-            <h2 className="text-2xl mb-2">{currentSong.title}</h2>
-            <YouTube
-              videoId={currentSong.videoId}
-              opts={{ width: "100%", height: "390" }}
-              onEnd={handlePlayerEnd}
-            />
-          </>
-        ) : (
-          <p>No song is currently playing.</p>
-        )}
-      </div>
+      {/* Add Song Form */}
+      <form onSubmit={handleSubmit} className="mb-8">
+        <div className="flex gap-2">
+          <Input
+            type="text"
+            value={inputUrl}
+            onChange={(e) => setInputUrl(e.target.value)}
+            placeholder="Paste YouTube URL here"
+            className="flex-grow bg-gray-800 text-gray-200 border-gray-600"
+          />
+          <Button type="submit" className="bg-gray-700 hover:bg-gray-600 text-gray-200">
+            <Music className="mr-2 h-4 w-4" />
+            Add Song
+          </Button>
+        </div>
+      </form>
 
       {/* Song Queue */}
-      <div className="w-3/4">
-        <h2 className="text-xl mb-4">Queue</h2>
-        {queue.length > 0 ? (
-          <ul>
-            {queue.map((song) => (
-              <li
-                key={song.id}
-                className="flex justify-between items-center bg-gray-800 p-4 rounded mb-2"
-              >
-                <span>{song.title}</span>
-                <div className="flex items-center">
-                  <button
-                    onClick={() => handleVote(song.id,true)}
-                    className="px-4 py-2 bg-blue-600 rounded hover:bg-blue-700"
-                  >
-                    ⬆ {song.upvotes}
-                  </button>
-                  {/* <button
-                    onClick={() => handleVote(song.id,false)}
-                    className="ml-2 px-4 py-2 bg-red-600 rounded hover:bg-red-700"
-                  >
-                    ⬇ */}
-                  {/* </button> */}
-                </div>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p>The queue is empty.</p>
-        )}
+      <div className="space-y-4">
+        <h2 className="text-2xl font-semibold text-gray-300">Upcoming Songs</h2>
+        {songs.map((song, index) => (
+          <Card key={song.id} className="bg-gray-800 hover:bg-gray-700 transition-colors duration-200">
+            <CardContent className="p-4 flex justify-between items-center">
+              <div>
+                <h3 className="font-medium text-gray-200">{song.title}</h3>
+                <a
+                  href={song.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-gray-400 hover:text-gray-300"
+                >
+                  View on YouTube
+                </a>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  onClick={() => handleVote(index, 'up')}
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center gap-1 bg-gray-700 hover:bg-gray-600 text-gray-200"
+                >
+                  <ThumbsUp className="w-4 h-4" />
+                  <span>{song.upvotes}</span>
+                </Button>
+                <Button
+                  onClick={() => handleVote(index, 'down')}
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center gap-1 bg-gray-700 hover:bg-gray-600 text-gray-200"
+                >
+                  <ThumbsDown className="w-4 h-4" />
+                  <span>{song.downvotes}</span>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default App;
