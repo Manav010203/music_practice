@@ -10,9 +10,13 @@ import { Progress } from "@/components/ui/progress"
 interface Song {
   id: string
   url: string
+  type: string
   title: string
   upvotes: number
   downvotes: number
+  haveUpvoted : boolean
+  
+
 }
 
 export default function SongQueue() {
@@ -61,6 +65,12 @@ export default function SongQueue() {
       newSongs[index].downvotes++
     }
     setSongs(newSongs)
+    const res= fetch("/ai/stream/upvote",{
+        method: "POST",
+        body: JSON.stringify({
+            
+        })
+    })
   }
 
   useEffect(() => {
