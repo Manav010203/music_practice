@@ -1,6 +1,4 @@
 
-
-import { authOptions } from "@/app/lib/auth-options";
 import prisma from "@/app/lib/db";
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
@@ -12,9 +10,14 @@ const UpvoteSchema = z.object({
 });
 
 export async function POST(req: NextRequest) {
-  const session = await getServerSession(authOptions);
+  const session = await getServerSession();
 
-  if (!session?.user) {
+  const user = await prisma.user.findFirst({
+    where:{
+      email: session?.user?.email ??""
+    }
+  })
+  if (!user) {
     return NextResponse.json(
       {
         message: "Unauthenticated",
@@ -24,7 +27,6 @@ export async function POST(req: NextRequest) {
       },
     );
   }
-  const user = session.user;
 
   try {
     const data = UpvoteSchema.parse(await req.json());
