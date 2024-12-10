@@ -1,4 +1,5 @@
-import { prismaClient } from "@/app/lib/db";
+
+import prisma from "@/app/lib/db";
 import { getServerSession } from "next-auth";
 
 import { NextRequest, NextResponse } from "next/server";
@@ -6,7 +7,7 @@ import { NextRequest, NextResponse } from "next/server";
 export async function GET(re: NextRequest){
     
    const session =await getServerSession()
-   const user = await prismaClient.user.findFirst({
+   const user = await prisma.user.findFirst({
     where:{
         email: session?.user?.email??""
 
@@ -20,7 +21,7 @@ export async function GET(re: NextRequest){
     })
    }
 
-   const streams = await prismaClient.stream.findMany({
+   const streams = await prisma.stream.findMany({
     where:{
         userId: user.id
     },

@@ -1,42 +1,50 @@
-import { prismaClient } from "@/app/lib/db";
+
+
+import { authOptions } from "@/app/lib/auth-options";
+import prisma from "@/app/lib/db";
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
 const UpvoteSchema = z.object({
   streamId: z.string(),
+  spaceId:z.string()
 });
 
 export async function POST(req: NextRequest) {
+  const session = await getServerSession(authOptions);
+
+  if (!session?.user) {
+    return NextResponse.json(
+      {
+        message: "Unauthenticated",
+      },
+      {
+        status: 403,
+      },
+    );
+  }
+  const user = session.user;
+
   try {
-    const session = await getServerSession();
-
-    if (!session?.user) {
-      return NextResponse.json(
-        { message: "Unauthenticated" },
-        { status: 403 }
-      );
-    }
-
-    const user = session.user;
-
-    // Parse and validate request body
     const data = UpvoteSchema.parse(await req.json());
-
-    // Create the upvote
-    await prismaClient.upvote.create({
+    await prisma.upvote.create({
       data: {
-        userId: user.id, // Use user ID from the session
+        userId: user.id,
         streamId: data.streamId,
       },
     });
-
-    return NextResponse.json({ message: "Done!" });
+    return NextResponse.json({
+      message: "Done!",
+    });
   } catch (e) {
-    console.error("Error while upvoting:", e);
     return NextResponse.json(
-      { message: "ERROR while upvoting",},
-      { status: 500 } // Use a more appropriate status code for server errors
+      {
+        message: "Error while upvoting",
+      },
+      {
+        status: 403,
+      },
     );
   }
 }

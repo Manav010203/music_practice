@@ -1,4 +1,5 @@
-import { prismaClient } from "@/app/lib/db";
+
+import prisma from "@/app/lib/db";
 import { YT_REGEX } from "@/app/lib/utils";
 import { NextRequest, NextResponse } from "next/server"
 //@ts-ignore 
@@ -31,7 +32,7 @@ export async function POST (req:NextRequest){
         thumbnails.sort((a: { width: number }, b: { width: number }) =>
           a.width < b.width ? -1 : 1,
         );
-        const stream = await prismaClient.stream.create({
+        const stream = await prisma.stream.create({
             data: {
               userId: data.creatorId,
               url: data.url,
@@ -66,7 +67,7 @@ export async function POST (req:NextRequest){
 
 export async function GET(req:NextRequest) {
     const creatorId = req.nextUrl.searchParams.get("creatorId");
-    const streams = await prismaClient.user.findMany({
+    const streams = await prisma.user.findMany({
         where:{
             // check it
 

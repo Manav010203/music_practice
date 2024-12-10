@@ -15,10 +15,10 @@ interface Song {
   upvotes: number
   downvotes: number
   haveUpvoted : boolean
-  
-
 }
 
+
+const REFRESH_INTERVAL_MS=10*1000;
 export default function SongQueue() {
   const [songs, setSongs] = useState<Song[]>([])
   const [inputUrl, setInputUrl] = useState('')
@@ -31,30 +31,44 @@ export default function SongQueue() {
     const match = url.match(regExp)
     return (match && match[2].length === 11) ? match[2] : null
   }
+  async function refreshStreams() {
+    const res = await fetch(`/api/stream/my`,{
+        method: "GET",
+        body: JSON.stringify({
+            email:"manavwork123@gmail.com",
+            userId:"58fe10fa-7fb1-4552-acc4-d4b421d91d04"
+        })
+    })
+    
+  }
+  
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
     const res = await fetch("/api/stream/",{
         method:"POST",
         body: JSON.stringify({
-            creatorId:"4cbbdb8a-77ed-4faa-bbad-b28ecde8cf93",
+            creatorId:"58fe10fa-7fb1-4552-acc4-d4b421d91d04",
             url: inputUrl
         })
     })
     const videoId = extractVideoId(inputUrl)
-    if (videoId) {
-      const newSong: Song = {
-        id: videoId,
-        url: inputUrl,
-        title: `Song ${songs.length + 1}`, // Placeholder title
-        upvotes: 0,
-        downvotes: 0
-      }
-      setSongs([...songs, newSong])
+    // if (videoId) {
+    //   const newSong: Song = {
+    //     id: videoId,
+    //     url: inputUrl,
+    //     title: `Song ${songs.length + 1}`, // Placeholder title
+    //     upvotes: 0,
+    //     downvotes: 0,
+    //     haveUpvoted: false
+    //   }
+ 
+      setSongs([...songs, await res.json()])
       setInputUrl('')
-    } else {
-      alert('Invalid YouTube URL')
-    }
+    // } else {
+    //   alert('Invalid YouTube URL')
+    // }
   }
 
   const handleVote = (index: number, type: 'up' | 'down') => {
@@ -65,7 +79,7 @@ export default function SongQueue() {
       newSongs[index].downvotes++
     }
     setSongs(newSongs)
-    const res= fetch("/ai/stream/upvote",{
+    const res= fetch("/api/stream/upvote",{
         method: "POST",
         body: JSON.stringify({
             
