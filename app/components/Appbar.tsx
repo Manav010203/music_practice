@@ -7,7 +7,7 @@ import Link from "next/link";
 export function Appbar(){
     const session = useSession();
     return <div>
-        <header className="container mx-auto px-4 py-6 flex justify-between items-center">
+        <header className="container mx-auto px-4 py-6 flex justify-between items-center border-b-2">
         <Link href="/" className="text-2xl font-bold flex items-center">
           <Music className="mr-2" />
           FanTune

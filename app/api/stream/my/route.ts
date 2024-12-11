@@ -4,12 +4,12 @@ import { getServerSession } from "next-auth";
 
 import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(re: NextRequest){
+export async function GET(req: NextRequest){
     
    const session =await getServerSession()
    const user = await prisma.user.findFirst({
     where:{
-        email: session?.user?.email??""
+        email: session?.user?.email ??""
 
     }
 })
