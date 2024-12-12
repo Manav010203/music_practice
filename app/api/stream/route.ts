@@ -71,16 +71,38 @@ export async function POST (req:NextRequest){
 
 export async function GET(req:NextRequest) {
     const creatorId = req.nextUrl.searchParams.get("creatorId");
-    const streams = await prisma.user.findMany({
+    if(!creatorId){
+        return NextResponse.json({
+            message:"ERROR"
+        },{
+            status: 411
+        })
+    }
+    const streams = await prisma.stream.findMany({
         where:{
-            // check it
-
-            id: creatorId??""
-
+            userId: creatorId
+        },
+        include:{
+            _count:{
+                select:{
+                    upvotes:true
+                },
+            },
+            upvotes:{
+                where:{
+                    userId:creatorId
+                }
+            }
         }
-    })
-    return NextResponse.json({
-        streams
-    })
+       })
+       return NextResponse.json({
+        streams: streams.map(({ _count, ...rest }) => ({
+          ...rest,
+          upvotes: _count.upvotes,
+          haveUpvoted: rest.upvotes.length ? true : false,
+        })),
+      });
+        
+    
     
 }

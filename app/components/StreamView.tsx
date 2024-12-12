@@ -72,7 +72,7 @@ setLoading(true)
   
 
   async function refreshStreams() {
-    const res = await fetch(`/api/stream/my`, {
+    const res = await fetch(`/api/stream/?creatorId=${creatorId}`, {
       credentials: "include",
     });
     const json = await res.json();
@@ -180,6 +180,7 @@ setLoading(true)
                 <iframe
                   width="100%"
                   height="100%"
+                  //@ts-ignore
                   src={getEmbedUrl(currentSong.url)}
                   allowFullScreen
                   className="rounded-lg"
