@@ -10,22 +10,25 @@ import { z } from "zod";
 
 const CreatStreamSchema = z.object({
     creatorId: z.string(),
-    url: z.string()
+    url: z.string(),
 })
 export async function POST (req:NextRequest){
     try {
         const data = CreatStreamSchema.parse(await req.json());
-        const isYt = data.url.match(YT_REGEX)
-
-        if(!isYt){
-            return NextResponse.json({
-                message: "Wrong url format"
-            },{
-                status:400
-            })
+        const isYt = data.url.match(YT_REGEX);
+        const videoId = data.url ? data.url.match(YT_REGEX)?.[1] : null;
+        if (!isYt || !videoId) {
+          return NextResponse.json(
+            {
+              message: "Invalid YouTube URL format",
+            },
+            {
+              status: 400,
+            },
+          );
         }
-        const extractedId = data.url.split("?v=")[1];
-        const res = await youtubesearchapi.GetVideoDetails(extractedId);
+        
+        const res = await youtubesearchapi.GetVideoDetails(videoId);
     
         const thumbnails = res.thumbnail.thumbnails;
         thumbnails.sort((a: { width: number }, b: { width: number }) =>
@@ -34,8 +37,9 @@ export async function POST (req:NextRequest){
         const stream = await prisma.stream.create({
             data: {
               userId: data.creatorId,
+
               url: data.url,
-              extractedId,
+              extractedId: videoId,
               type: "Youtube",
               title: res.title ?? "Can't find video",
               smallImg:
@@ -56,8 +60,9 @@ export async function POST (req:NextRequest){
 
     }
     catch(e){
+        console.error(e)
         return NextResponse.json({
-            message:' error ehile adding a stream'
+            message:' error while adding a stream'
         },{
             status: 411
         })
