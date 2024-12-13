@@ -1,4 +1,5 @@
 
+
 import prisma from "@/app/lib/db";
 import { YT_REGEX } from "@/app/lib/utils";
 import { getServerSession } from "next-auth";
@@ -94,7 +95,8 @@ export async function GET(req:NextRequest) {
     }
     const [streams,activeStream] =await Promise.all([await prisma.stream.findMany({
         where:{
-            userId: creatorId
+            userId: creatorId,
+            played:false
         },
         include:{
             _count:{
@@ -108,7 +110,8 @@ export async function GET(req:NextRequest) {
                 }
             }
         }
-       }),prisma.currentStream.findFirst({
+       }),
+       prisma.currentStream.findFirst({
         where:{
           userId: creatorId
         }

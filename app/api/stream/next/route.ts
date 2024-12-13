@@ -2,7 +2,6 @@
 import prisma from "@/app/lib/db";
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
-import { Stream } from "stream";
 
 
 export async function GET() {
@@ -22,7 +21,8 @@ export async function GET() {
     }
     const mostUpvotedStream = await prisma.stream.findFirst({
         where:{
-            userId:user.id
+            userId:user.id,
+            played: false
         },
         orderBy:{
             upvotes:{
@@ -32,7 +32,7 @@ export async function GET() {
     })
     await Promise.all([prisma.currentStream.upsert({
         where:{
-            userId: user.id
+            userId:user.id
         },
         update:{
             streamId: mostUpvotedStream?.id
@@ -41,9 +41,14 @@ export async function GET() {
             userId: user.id,
             streamId:mostUpvotedStream?.id
         }
-    }), prisma.stream.delete({
+    }), prisma.stream.update({
         where:{
             id: mostUpvotedStream?.id ?? "",
+        },
+        data:{
+            played:true,
+            playedTs: new Date()
+           
         }
     })])
     return NextResponse.json({

@@ -32,17 +32,18 @@ export default function StreamView({
   const [currentSong, setCurrentSong] = useState<Song | null>(null);
   const [newSongUrl, setNewSongUrl] = useState('');
   const [loading,setLoading] = useState(false)
+  const [playnextLoader,setPlaynextLoader]= useState(false)
 
   useEffect(() => {
     refreshStreams();
     const interval = setInterval(refreshStreams, REFRESH_INTERVAL_MS);
     return () => clearInterval(interval); // Cleanup interval on unmount
   }, []);
-  useEffect(()=>{
-    if(!currentSong && songQueue.length>0){
-      playNextSong();
-    }
-  },[currentSong,songQueue])
+  // useEffect(()=>{
+  //   if(!currentSong && songQueue.length>0){
+  //     playNextSong();
+  //   }
+  // },[currentSong,songQueue])
 
   useEffect(() => {
     if (!currentSong && songQueue.length > 0) {
@@ -82,8 +83,9 @@ setLoading(true)
       credentials: "include",
     });
     const json = await res.json();
-    setSongQueue(json.streams.sort((a:alpha,b:alpha)=>a.upvotes < b.upvotes ? 1 : -1) || []); // Ensure it's an array
-  }
+    setSongQueue(json.stream.sort((a:alpha,b:alpha)=>a.upvotes < b.upvotes ? 1 : -1) || []); // Ensure it's an array
+   
+}
 
   const handleVote = (id: number, isUpvote: boolean) => {
     setSongQueue((prevQueue) =>
@@ -118,6 +120,55 @@ setLoading(true)
       return restQueue;
     });
   };
+  // const playNext = async ()=>{
+  //   if(songQueue.length>=0){
+  //     try{
+  //       setPlaynextLoader(true)
+  //       const data = await fetch('/api/stream/next',{
+  //         method:"GET",
+  //       })
+  //       const json = await data.json();
+  //       setCurrentSong(json.stream)
+  //       setSongQueue(q=> q.filter(x=>x.id!== json.stream?.id))
+  //     }catch(e){
+
+  //     }
+  //     setPlaynextLoader(false)
+  //   }
+  // }
+
+  const playNext = async () => {
+    if (songQueue.length > 0) {
+      try {
+        setPlaynextLoader(true);
+        const response = await fetch('/api/stream/next', {
+          method: "GET",
+        });
+  
+        if (!response.ok) {
+          throw new Error(`API error: ${response.statusText}`);
+        }
+  
+        const json = await response.json();
+  
+        if (!json.stream) {
+          throw new Error("Invalid response: 'stream' is missing from the response.");
+        }
+  
+        setCurrentSong(json.stream);
+        setSongQueue((q) => q.filter((x) => x.id !== json.stream.id));
+      } catch (error) {
+        console.error("Error playing next song:", error);
+        toast.error("Failed to play the next song. Please try again.");
+      } finally {
+        setPlaynextLoader(false);
+      }
+    } else {
+      setCurrentSong(null);
+      toast.info("No more songs in the queue.");
+    }
+  };
+  
 
   // const getEmbedUrl = (url: string) => {
   //   const videoId = url.split('v=')[1];
@@ -217,14 +268,14 @@ setLoading(true)
                   src={getEmbedUrl(currentSong.url)}
                   allowFullScreen
                   className="rounded-lg"
-                  onEnded={playNextSong}
+                  onEnded={playNext}
                 ></iframe>
               </div>
               <div className='pt-2 flex justify-end'>
               <Button onClick={()=>
-                playNextSong()
-              }  type="submit" variant="secondary">
-              <span>&#8594;</span>Next Song</Button>
+                playNext()
+              }  type="submit" variant="secondary">{playnextLoader ? "Loading..":"» Next Song"}
+              </Button>
               </div>
               
             </CardContent>
