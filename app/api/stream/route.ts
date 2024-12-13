@@ -1,6 +1,7 @@
 
 import prisma from "@/app/lib/db";
 import { YT_REGEX } from "@/app/lib/utils";
+import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server"
 //@ts-ignore 
 import youtubesearchapi from "youtube-search-api"
@@ -71,6 +72,19 @@ export async function POST (req:NextRequest){
 
 export async function GET(req:NextRequest) {
     const creatorId = req.nextUrl.searchParams.get("creatorId");
+    const session = await getServerSession();
+    const user =await prisma.user.findFirst({
+      where:{
+        email: session?.user?.email ??""
+      }
+    });
+    if(!user){
+      return NextResponse.json({
+        message:"Unauthenticated",
+      },{
+        status: 403
+      })
+    }
     if(!creatorId){
         return NextResponse.json({
             message:"ERROR"
@@ -90,7 +104,7 @@ export async function GET(req:NextRequest) {
             },
             upvotes:{
                 where:{
-                    userId:creatorId
+                    userId:user.id
                 }
             }
         }

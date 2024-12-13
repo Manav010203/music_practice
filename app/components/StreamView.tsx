@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
 import { ArrowBigUp, ArrowBigDown, ThumbsUp } from 'lucide-react'
 import { Appbar } from '../components/Appbar'
+import { ToastContainer, toast } from 'react-toastify';
 
 interface Song {
   id: number;
@@ -53,7 +54,7 @@ setLoading(true)
       method: "POST",
       body: JSON.stringify({
         url: newSongUrl,
-        creatorId: "1686036d-a955-4dc3-b99b-72e646b3903d",
+        creatorId: creatorId,
       }),
     });
 
@@ -76,7 +77,7 @@ setLoading(true)
       credentials: "include",
     });
     const json = await res.json();
-    setSongQueue(json.streams || []); // Ensure it's an array
+    setSongQueue(json.streams.sort((a:any,b:any)=>a.upvotes < b.upvotes ? 1 : -1) || []); // Ensure it's an array
   }
 
   const handleVote = (id: number, isUpvote: boolean) => {
@@ -150,6 +151,25 @@ setLoading(true)
     const videoId = getVideoId(url);
     return videoId ? `https://img.youtube.com/vi/${videoId}/default.jpg` : '';
   };
+//   const shareButton=()=>{
+//     const shareableLink = `${window.location.href}/creator/${creatorId}`
+//     navigator.clipboard.writeText(shareableLink).then(()=>{
+//         toast.success('Link copied',{})
+//     })
+
+//   }
+  const shareButton = () => {
+    const shareableLink = `${window.location.origin}/creator/${creatorId}`;
+    navigator.clipboard
+      .writeText(shareableLink)
+      .then(() => {
+        toast.success("Link copied to clipboard!");
+      })
+      .catch((err) => {
+        console.error("Failed to copy link:", err);
+        toast.error("Unable to copy the link. Please try again.");
+      });
+  };
   
   
 
@@ -175,7 +195,15 @@ setLoading(true)
         {currentSong && (
           <Card className="mb-6 bg-gray-800 border-gray-700">
             <CardContent className="p-4">
+              
+              <div className='flex justify-between pb-2'>
               <h2 className="text-2xl font-semibold mb-4 text-gray-100">Now Playing</h2>
+              <Button onClick={()=>
+             shareButton()
+              }  type="submit" variant="secondary">⇄
+              Share</Button>
+              </div>
+              
               <div className="aspect-video">
                 <iframe
                   width="100%"
