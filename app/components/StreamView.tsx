@@ -4,9 +4,9 @@ import { useState, useEffect } from 'react'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
-import { ArrowBigUp, ArrowBigDown, ThumbsUp } from 'lucide-react'
+import { ThumbsUp } from 'lucide-react'
 import { Appbar } from '../components/Appbar'
-import { ToastContainer, toast } from 'react-toastify';
+import { toast } from 'react-toastify';
 
 interface Song {
   id: number;
@@ -15,13 +15,18 @@ interface Song {
   haveUpvoted: boolean;
   title:string
 }
+interface alpha {
+  upvotes: number
+}
 
 const REFRESH_INTERVAL_MS = 10 * 1000;
 
 export default function StreamView({
-    creatorId
+    creatorId,
+    playVideo = false
 }:{
-    creatorId:string
+    creatorId:string;
+    playVideo:boolean;
 }) {
   const [songQueue, setSongQueue] = useState<Song[]>([]);
   const [currentSong, setCurrentSong] = useState<Song | null>(null);
@@ -77,7 +82,7 @@ setLoading(true)
       credentials: "include",
     });
     const json = await res.json();
-    setSongQueue(json.streams.sort((a:any,b:any)=>a.upvotes < b.upvotes ? 1 : -1) || []); // Ensure it's an array
+    setSongQueue(json.streams.sort((a:alpha,b:alpha)=>a.upvotes < b.upvotes ? 1 : -1) || []); // Ensure it's an array
   }
 
   const handleVote = (id: number, isUpvote: boolean) => {
@@ -208,7 +213,7 @@ setLoading(true)
                 <iframe
                   width="100%"
                   height="100%"
-                  //@ts-ignore
+                  //@ts-expect-error: This function has a known issue
                   src={getEmbedUrl(currentSong.url)}
                   allowFullScreen
                   className="rounded-lg"

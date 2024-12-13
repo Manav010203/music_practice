@@ -3,9 +3,9 @@ import prisma from "@/app/lib/db";
 import { YT_REGEX } from "@/app/lib/utils";
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server"
-//@ts-ignore 
+//@ts-expect-error: This function has a known issue
 import youtubesearchapi from "youtube-search-api"
-import { z } from "zod";
+import {  z } from "zod";
 
 
 
@@ -92,7 +92,7 @@ export async function GET(req:NextRequest) {
             status: 411
         })
     }
-    const streams = await prisma.stream.findMany({
+    const [streams,activeStream] =await Promise.all([await prisma.stream.findMany({
         where:{
             userId: creatorId
         },
@@ -108,7 +108,11 @@ export async function GET(req:NextRequest) {
                 }
             }
         }
-       })
+       }),prisma.currentStream.findFirst({
+        where:{
+          userId: creatorId
+        }
+       })])
        return NextResponse.json({
         streams: streams.map(({ _count, ...rest }) => ({
           ...rest,

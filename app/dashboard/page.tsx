@@ -163,24 +163,24 @@
 // }
 'use client'
 
-import { useState, useEffect } from 'react'
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent } from "@/components/ui/card"
-import { ArrowBigUp, ArrowBigDown, ThumbsUp } from 'lucide-react'
-import { Appbar } from '../components/Appbar'
+// import { useState, useEffect } from 'react'
+// import { Button } from "@/components/ui/button"
+// import { Input } from "@/components/ui/input"
+// import { Card, CardContent } from "@/components/ui/card"
+// import { ArrowBigUp, ArrowBigDown, ThumbsUp } from 'lucide-react'
+// import { Appbar } from '../components/Appbar'
 import StreamView from '../components/StreamView'
 
-interface Song {
-  id: number;
-  url: string;
-  upvotes: number;
-  haveUpvoted: boolean;
-  title:string
-}
+// interface Song {
+//   id: number;
+//   url: string;
+//   upvotes: number;
+//   haveUpvoted: boolean;
+//   title:string
+// }
 
-const REFRESH_INTERVAL_MS = 10 * 1000;
-const creatorId="50748195-32cc-4d31-874a-7d648c5ad8e7"
+// const REFRESH_INTERVAL_MS = 10 * 1000;
+const creatorId="9a45778f-c6b1-4621-904d-fb12c0d28d47"
 
 export default function SongVotingQueue() {
 //   const [songQueue, setSongQueue] = useState<Song[]>([]);
@@ -390,6 +390,6 @@ export default function SongVotingQueue() {
 
   // );
 
-  return <StreamView creatorId={creatorId}/>
+  return <StreamView creatorId={creatorId} playVideo={true}/>
 
 }

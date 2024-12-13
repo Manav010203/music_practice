@@ -1,6 +1,7 @@
 import GoogleProvider from "next-auth/providers/google"
 import NextAuth from "next-auth";
 import prisma from "@/app/lib/db";
+import { NextResponse } from "next/server";
 const handler = NextAuth({
     providers:[
         GoogleProvider({
@@ -22,7 +23,10 @@ const handler = NextAuth({
                     }
                 })
             }catch(e){
-
+                console.error(e)
+                return false && NextResponse.json({
+                 message:"error",
+                })
             }
             return true
         }

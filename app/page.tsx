@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Music, Users, Heart, Headphones, Star } from 'lucide-react'
+// import { Input } from "@/components/ui/input"
+import { Music, Users, Heart, Headphones} from 'lucide-react'
 import Link from "next/link"
 import { Appbar } from "./components/Appbar"
 import { Redirect } from "./components/Redirect"
@@ -137,7 +137,7 @@ export default function LandingPage() {
     </div>
   )
 }
-//@ts-ignore
+//@ts-expect-error: This function has a known issue
 function FeatureCard({ icon, title, description }) {
   return (
     <div className="bg-gray-700 p-6 rounded-lg text-center">
@@ -147,13 +147,13 @@ function FeatureCard({ icon, title, description }) {
     </div>
   )
 }
-//@ts-ignore
-function ListItem({ children }) {
-  return (
-    <li className="flex items-center">
-      <Star className="w-5 h-5 text-purple-400 mr-2" />
-      <span>{children}</span>
-    </li>
-  )
-}
+
+// function ListItem({ children }) {
+//   return (
+//     <li className="flex items-center">
+//       <Star className="w-5 h-5 text-purple-400 mr-2" />
+//       <span>{children}</span>
+//     </li>
+//   )
+// }
 
