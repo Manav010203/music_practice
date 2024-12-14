@@ -93,7 +93,7 @@ export async function GET(req:NextRequest) {
             status: 411
         })
     }
-    const [streams,activeStream] =await Promise.all([await prisma.stream.findMany({
+    const [streams] =await Promise.all([await prisma.stream.findMany({
         where:{
             userId: creatorId,
             played:false

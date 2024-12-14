@@ -23,7 +23,7 @@ const REFRESH_INTERVAL_MS = 10 * 1000;
 
 export default function StreamView({
     creatorId,
-    playVideo = false
+    // playVideo = false
 }:{
     creatorId:string;
     playVideo:boolean;
@@ -56,13 +56,13 @@ export default function StreamView({
 setLoading(true)
     if (!newSongUrl) return;
 
-    const res = await fetch(`/api/stream/`, {
-      method: "POST",
-      body: JSON.stringify({
-        url: newSongUrl,
-        creatorId: creatorId,
-      }),
-    });
+    // const res = await fetch(`/api/stream/`, {
+    //   method: "POST",
+    //   body: JSON.stringify({
+    //     url: newSongUrl,
+    //     creatorId: creatorId,
+    //   }),
+    // });
 
     const newSong: Song = {
       id: Date.now(),
@@ -83,8 +83,13 @@ setLoading(true)
       credentials: "include",
     });
     const json = await res.json();
-    setSongQueue(json.stream.sort((a:alpha,b:alpha)=>a.upvotes < b.upvotes ? 1 : -1) || []); // Ensure it's an array
-   
+    setSongQueue(json.streams.sort((a:alpha,b:alpha)=>a.upvotes < b.upvotes ? 1 : -1) || []); // Ensure it's an array
+    setCurrentSong(video=>{
+      if(video?.id!==json.activeStream?.stream.id){
+        return video
+      }
+      return json.stream
+  })
 }
 
   const handleVote = (id: number, isUpvote: boolean) => {
@@ -120,54 +125,54 @@ setLoading(true)
       return restQueue;
     });
   };
-  // const playNext = async ()=>{
-  //   if(songQueue.length>=0){
-  //     try{
-  //       setPlaynextLoader(true)
-  //       const data = await fetch('/api/stream/next',{
-  //         method:"GET",
-  //       })
-  //       const json = await data.json();
-  //       setCurrentSong(json.stream)
-  //       setSongQueue(q=> q.filter(x=>x.id!== json.stream?.id))
-  //     }catch(e){
-
-  //     }
-  //     setPlaynextLoader(false)
-  //   }
-  // }
-
-  const playNext = async () => {
-    if (songQueue.length > 0) {
-      try {
-        setPlaynextLoader(true);
-        const response = await fetch('/api/stream/next', {
-          method: "GET",
-        });
-  
-        if (!response.ok) {
-          throw new Error(`API error: ${response.statusText}`);
-        }
-  
-        const json = await response.json();
-  
-        if (!json.stream) {
-          throw new Error("Invalid response: 'stream' is missing from the response.");
-        }
-  
-        setCurrentSong(json.stream);
-        setSongQueue((q) => q.filter((x) => x.id !== json.stream.id));
-      } catch (error) {
-        console.error("Error playing next song:", error);
-        toast.error("Failed to play the next song. Please try again.");
-      } finally {
-        setPlaynextLoader(false);
+  const playNext = async ()=>{
+    if(songQueue.length>=0){
+      try{
+        setPlaynextLoader(true)
+        const data = await fetch('/api/stream/next',{
+          method:"GET",
+        })
+        const json = await data.json();
+        setCurrentSong(json.stream)
+        setSongQueue(q=> q.filter(x=>x.id!== json.stream?.id))
+      }catch(e){
+console.error(e)
       }
-    } else {
-      setCurrentSong(null);
-      toast.info("No more songs in the queue.");
+      setPlaynextLoader(false)
     }
-  };
+  }
+
+  // const playNext = async () => {
+  //   if (songQueue.length > 0) {
+  //     try {
+  //       setPlaynextLoader(true);
+  //       const response = await fetch('/api/stream/next', {
+  //         method: "GET",
+  //       });
+  
+  //       if (!response.ok) {
+  //         throw new Error(`API error: ${response.statusText}`);
+  //       }
+  
+  //       const json = await response.json();
+  
+  //       if (!json.stream) {
+  //         throw new Error("Invalid response: 'stream' is missing from the response.");
+  //       }
+  
+  //       setCurrentSong(json.stream);
+  //       setSongQueue((q) => q.filter((x) => x.id !== json.stream.id));
+  //     } catch (error) {
+  //       console.error("Error playing next song:", error);
+  //       toast.error("Failed to play the next song. Please try again.");
+  //     } finally {
+  //       setPlaynextLoader(false);
+  //     }
+  //   } else {
+  //     setCurrentSong(null);
+  //     toast.info("No more songs in the queue.");
+  //   }
+  // };
   
 
   // const getEmbedUrl = (url: string) => {
